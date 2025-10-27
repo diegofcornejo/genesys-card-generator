@@ -91,10 +91,10 @@ class YugiohCardDownloader:
             # Open image from bytes
             image = Image.open(io.BytesIO(image_data))
             
-            # Resize the image if it is larger than the maximum dimensions
-            max_width, max_height = 316, 461  # Standard YGO card proportions but smaller
-            if image.width > max_width or image.height > max_height:
-                image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            # Enforce a consistent size for all cards to keep overlays uniform
+            target_width, target_height = 316, 461
+            if image.size != (target_width, target_height):
+                image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
             
             # Create a drawing context
             draw = ImageDraw.Draw(image)
@@ -136,8 +136,8 @@ class YugiohCardDownloader:
             y = img_height - text_height - padding - 10  # Extra padding from bottom
             
             # Create background rectangle with generous padding for proper fit
-            rect_padding_horizontal = 12  # More horizontal padding
-            rect_padding_vertical = 8     # More vertical padding
+            rect_padding_horizontal = 24  # More horizontal padding
+            rect_padding_vertical = 16     # More vertical padding
             
             rect_x1 = x - rect_padding_horizontal
             rect_y1 = y - rect_padding_vertical

@@ -37,39 +37,51 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Note**: The script now requires Pillow (PIL) for image processing to add point overlays.
+**Note**: The script requires Pillow (PIL) for image processing.
 
 ## Usage
 
+The main script to generate or regenerate all card images is `regenerate_all_cards.py`. It handles both downloading new cards and processing local alias images in a unified process.
+
 ### Basic Usage
 
-Download all cards from the default `cards.json` file:
+To regenerate all cards using the default file paths (`cards.json`, `alias.json`, `selected_images`) and save them to the `generated_cards` directory:
 
 ```bash
 source venv/bin/activate  # Activate virtual environment first
-python3 card_downloader.py
+python3 regenerate_all_cards.py
 ```
 
-Images will be saved to the `downloaded_cards` directory, which will be created automatically if it doesn't exist.
+The script will first clean the output directory to ensure a fresh build.
+
+### Test Run with a Limit
+
+To test the process on a small number of cards, use the `--limit` option. This will only process the first 10 cards from `cards.json` (and all alias cards).
+
+```bash
+python3 regenerate_all_cards.py --limit 10
+```
 
 ### Advanced Usage
 
+You can customize the paths for input files and the output directory.
+
 ```bash
-# Specify a different JSON file
-python3 card_downloader.py --file /path/to/your/cards.json
-
-# Specify output directory
-python3 card_downloader.py -o /path/to/output/directory
-
-# Adjust delay between downloads (be respectful!)
-python3 card_downloader.py -d 0.2
+python3 regenerate_all_cards.py \
+    --cards /path/to/your/cards.json \
+    --alias /path/to/your/alias.json \
+    --alias-images /path/to/your/local_images \
+    --output /path/to/final_destination
 ```
 
 ### Command Line Options
 
-- `-f, --file`: Path to the cards JSON file (default: `cards.json`)
-- `-o, --output`: Output directory for downloaded images (default: `downloaded_cards`)
-- `-d, --delay`: Delay between downloads in seconds (default: 0.1)
+- `-c, --cards`: Path to the cards JSON file (default: `cards.json`).
+- `-a, --alias`: Path to the alias JSON file (default: `alias.json`).
+- `-i, --alias-images`: Directory with pre-downloaded alias images (default: `selected_images`).
+- `-o, --output`: Unified output directory for all generated cards (default: `generated_cards`).
+- `-d, --delay`: Delay between downloads in seconds (default: 0.1).
+- `-l, --limit`: For testing, limits the number of cards processed from `cards.json` (default: all).
 
 ## JSON File Format
 
@@ -99,14 +111,10 @@ Optional fields:
 
 ## Output
 
-Images are saved with simple naming and include point overlays:
-```
-{card_code}.jpg
-```
+All generated images are saved to the output directory (default: `generated_cards`).
 
-For example:
-- `21044178.jpg` (Abyss Dweller with points overlay)
-- `98287529.jpg` (Amorphactor Pain with points overlay)
+- **Unified Image Size**: All cards, whether downloaded or local, are resized to a standard dimension (`316x461`) to ensure the overlay looks consistent across all images.
+- **File Naming**: Images are saved as `{card_code}.jpg`.
 
 ### Point Overlay System
 
