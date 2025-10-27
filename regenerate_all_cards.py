@@ -103,9 +103,9 @@ class CardRegenerator:
                 response = self.downloader.session.get(image_url, timeout=30)
                 response.raise_for_status()
                 
-                # 2. Apply overlay with consistent settings (full-size font)
+                # 2. Apply overlay with consistent settings (50% font scale)
                 modified_image_data = self.downloader.add_points_overlay(
-                    response.content, points, font_scale=1.0
+                    response.content, points, font_scale=0.5
                 )
 
                 # 3. Save to the unified output directory
@@ -159,9 +159,9 @@ class CardRegenerator:
                     with open(image_path, 'rb') as f:
                         image_data = f.read()
 
-                    # 2. Apply overlay with consistent settings (full-size font)
+                    # 2. Apply overlay with consistent settings (50% font scale)
                     modified_image_data = self.downloader.add_points_overlay(
-                        image_data, points, font_scale=1.0
+                        image_data, points, font_scale=0.5
                     )
                     
                     # 3. Save to the unified output directory
