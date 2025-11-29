@@ -75,7 +75,7 @@ class YugiohCardDownloader:
         except:
             return None
     
-    def add_points_overlay(self, image_data: bytes, points: int, font_scale: float = 1.0) -> bytes:
+    def add_points_overlay(self, image_data: bytes, points: int, font_scale: float = 1.0, high_quality: bool = False) -> bytes:
         """
         Add points overlay to the image.
         
@@ -83,6 +83,7 @@ class YugiohCardDownloader:
             image_data: Original image data as bytes
             points: Points value to overlay
             font_scale: Scale factor for font size (default: 1.0)
+            high_quality: If True, keeps original image size. If False, resizes to thumbnail (default: False)
             
         Returns:
             Modified image data as bytes
@@ -92,10 +93,12 @@ class YugiohCardDownloader:
             image = Image.open(io.BytesIO(image_data))
             
             # Define a max size based on smaller alias images to keep file sizes down
-            max_width, max_height = 177, 254
-            if image.width > max_width or image.height > max_height:
-                # Use thumbnail to downscale images that are too large, preserving aspect ratio
-                image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            # Only resize if NOT high quality
+            if not high_quality:
+                max_width, max_height = 177, 254
+                if image.width > max_width or image.height > max_height:
+                    # Use thumbnail to downscale images that are too large, preserving aspect ratio
+                    image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
             
             # Create a drawing context
             draw = ImageDraw.Draw(image)
@@ -132,13 +135,16 @@ class YugiohCardDownloader:
                 text_height = int(font_size * 1.1)  # Add some vertical padding
             
             # Position: Bottom-left corner with padding
-            padding = 10
-            x = padding
-            y = img_height - text_height - padding - 10  # Extra padding from bottom
+            # Scale padding relative to font scale so it looks consistent
+            base_padding = 10
+            scaled_padding = int(base_padding * font_scale)
+            
+            x = scaled_padding
+            y = img_height - text_height - scaled_padding - int(10 * font_scale)  # Extra padding from bottom
             
             # Create background rectangle with generous padding for proper fit
-            rect_padding_horizontal = 12  # More horizontal padding
-            rect_padding_vertical = 8     # More vertical padding
+            rect_padding_horizontal = int(12 * font_scale)  # Scaled horizontal padding
+            rect_padding_vertical = int(8 * font_scale)     # Scaled vertical padding
             
             rect_x1 = x - rect_padding_horizontal
             rect_y1 = y - rect_padding_vertical
@@ -200,10 +206,12 @@ class YugiohCardDownloader:
                 rgb_image.paste(image, mask=image.split()[-1])  # Use alpha channel as mask
                 image = rgb_image
             
-            # Save to bytes with optimized compression for smaller file size
+            # Save to bytes with optimized compression
             output_buffer = io.BytesIO()
-            # Use lower quality and optimize for smaller file size (~30KB target)
+
+            # Set quality to 50 for smaller file size
             image.save(output_buffer, format='JPEG', quality=50, optimize=True)
+                
             return output_buffer.getvalue()
             
         except Exception as e:

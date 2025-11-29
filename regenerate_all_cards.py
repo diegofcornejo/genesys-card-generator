@@ -67,15 +67,29 @@ class CardRegenerator:
         with open(self.alias_path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
-    def run_regeneration(self, limit: int = None):
+    def run_regeneration(self, limit: int = None, high_quality: bool = False):
         """Execute both phases of the regeneration process."""
-        self.process_primary_cards(limit=limit)
-        # For a quick test, we can also limit alias processing or skip it.
-        # Here we'll process all aliases to ensure consistency checking.
-        self.process_alias_cards()
+        # Determine font scale based on quality setting
+        # 1.6 for High Quality (reduced 20%), 0.65 for Standard (increased 30%)
+        font_scale = 1.6 if high_quality else 0.65
+        
+        if high_quality:
+            print("✨ High Quality Mode: ON (Original image sizes)")
+        else:
+            print("📉 Standard Mode: ON (Optimized/Thumbnail sizes)")
+
+        self.process_primary_cards(limit=limit, font_scale=font_scale, high_quality=high_quality)
+        
+        # Phase 2: Alias Cards
+        # Alias cards are always small/local, so we force standard quality settings for them
+        # to ensure the overlay fits correctly regardless of the global HQ flag.
+        # Using font_scale=0.65 (increased 30%) as requested
+        print("\nℹ️  Alias cards will be processed with Standard settings (optimized for local image size)")
+        self.process_alias_cards(font_scale=0.65, high_quality=False)
+        
         print("\n🎉 Full regeneration process completed!")
 
-    def process_primary_cards(self, limit: int = None):
+    def process_primary_cards(self, limit: int = None, font_scale: float = 0.5, high_quality: bool = False):
         """Phase 1: Download and apply overlays for cards in cards.json."""
         print("\n--- Phase 1: Processing Primary Cards (from cards.json) ---")
         
@@ -103,9 +117,9 @@ class CardRegenerator:
                 response = self.downloader.session.get(image_url, timeout=30)
                 response.raise_for_status()
                 
-                # 2. Apply overlay with consistent settings (50% font scale)
+                # 2. Apply overlay with consistent settings
                 modified_image_data = self.downloader.add_points_overlay(
-                    response.content, points, font_scale=0.5
+                    response.content, points, font_scale=font_scale, high_quality=high_quality
                 )
 
                 # 3. Save to the unified output directory
@@ -125,7 +139,7 @@ class CardRegenerator:
         print(f"✅ Successfully generated: {success_count}/{total_cards} primary cards")
 
 
-    def process_alias_cards(self):
+    def process_alias_cards(self, font_scale: float = 0.5, high_quality: bool = False):
         """Phase 2: Apply overlays for alias cards from alias.json."""
         print("\n--- Phase 2: Processing Alias Cards (from alias.json) ---")
         total_aliases = sum(len(v) for v in self.alias_data.values())
@@ -159,9 +173,9 @@ class CardRegenerator:
                     with open(image_path, 'rb') as f:
                         image_data = f.read()
 
-                    # 2. Apply overlay with consistent settings (50% font scale)
+                    # 2. Apply overlay with consistent settings
                     modified_image_data = self.downloader.add_points_overlay(
-                        image_data, points, font_scale=0.5
+                        image_data, points, font_scale=font_scale, high_quality=high_quality
                     )
                     
                     # 3. Save to the unified output directory
@@ -209,6 +223,11 @@ def main():
         '-l', '--limit', type=int, default=None,
         help='Limit the number of primary cards to process for testing (default: all)'
     )
+    parser.add_argument(
+        '-hq', '--high-quality',
+        action='store_true',
+        help='Generate high quality images (original size) instead of thumbnails'
+    )
 
     args = parser.parse_args()
 
@@ -226,7 +245,7 @@ def main():
         delay=args.delay
     )
     
-    regenerator.run_regeneration(limit=args.limit)
+    regenerator.run_regeneration(limit=args.limit, high_quality=args.high_quality)
 
 
 if __name__ == '__main__':

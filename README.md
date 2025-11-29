@@ -82,6 +82,7 @@ python3 regenerate_all_cards.py \
 - `-o, --output`: Unified output directory for all generated cards (default: `generated_cards`).
 - `-d, --delay`: Delay between downloads in seconds (default: 0.1).
 - `-l, --limit`: For testing, limits the number of cards processed from `cards.json` (default: all).
+- `-hq, --high-quality`: Generate high quality images (original size) instead of optimized thumbnails.
 
 ## JSON File Format
 
@@ -113,7 +114,8 @@ Optional fields:
 
 All generated images are saved to the output directory (default: `generated_cards`).
 
-- **Unified Image Size**: All cards, whether downloaded or local, are resized to a standard dimension (`316x461`) to ensure the overlay looks consistent across all images.
+- **Standard Mode (Default)**: All cards are resized to a compact size (`177x254`) to optimize file size (approx. 10-30KB per image).
+- **High Quality Mode (`--high-quality`)**: Images keep their original resolution (usually larger) for better visual quality, but larger file sizes.
 - **File Naming**: Images are saved as `{card_code}.jpg`.
 
 ### Point Overlay System
