@@ -70,8 +70,7 @@ class CardRegenerator:
     def run_regeneration(self, limit: int = None, high_quality: bool = False):
         """Execute both phases of the regeneration process."""
         # Determine font scale based on quality setting
-        # 1.6 for High Quality (reduced 20%), 0.65 for Standard (increased 30%)
-        font_scale = 1.6 if high_quality else 0.65
+        font_scale = 1.45 if high_quality else 0.70
         
         if high_quality:
             print("✨ High Quality Mode: ON (Original image sizes)")
@@ -83,8 +82,8 @@ class CardRegenerator:
         # Phase 2: Alias Cards
         # Alias cards always use the specific font scale (0.65), but we match the
         # high_quality flag to preserve image fidelity if requested (no resize/compression).
-        print(f"\nℹ️  Alias cards will be processed with Scale 0.65 and Quality: {'High' if high_quality else 'Standard'}")
-        self.process_alias_cards(font_scale=0.65, high_quality=high_quality)
+        print(f"\nℹ️  Alias cards will be processed with Scale 0.70 and Quality: {'High' if high_quality else 'Standard'}")
+        self.process_alias_cards(font_scale=0.70, high_quality=high_quality)
         
         print("\n🎉 Full regeneration process completed!")
 
