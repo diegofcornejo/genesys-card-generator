@@ -75,7 +75,7 @@ class YugiohCardDownloader:
         except:
             return None
     
-    def add_points_overlay(self, image_data: bytes, points: int, font_scale: float = 1.0, high_quality: bool = False) -> bytes:
+    def add_points_overlay(self, image_data: bytes, points: int, font_scale: float = 1.0, high_quality: bool = False, custom_quality: int = None) -> bytes:
         """
         Add points overlay to the image.
         
@@ -84,6 +84,7 @@ class YugiohCardDownloader:
             points: Points value to overlay
             font_scale: Scale factor for font size (default: 1.0)
             high_quality: If True, keeps original image size. If False, resizes to thumbnail (default: False)
+            custom_quality: Optional JPEG quality override (0-100). If None, uses default logic.
             
         Returns:
             Modified image data as bytes
@@ -209,8 +210,10 @@ class YugiohCardDownloader:
             # Save to bytes with optimized compression
             output_buffer = io.BytesIO()
 
-            # Set quality to 50 for smaller file size
-            image.save(output_buffer, format='JPEG', quality=50, optimize=True)
+            # Determine quality: use custom if provided, otherwise 90 for HQ, 50 for Standard
+            final_quality = custom_quality if custom_quality is not None else (90 if high_quality else 50)
+            
+            image.save(output_buffer, format='JPEG', quality=final_quality, optimize=True)
                 
             return output_buffer.getvalue()
             

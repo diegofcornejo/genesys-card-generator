@@ -81,11 +81,10 @@ class CardRegenerator:
         self.process_primary_cards(limit=limit, font_scale=font_scale, high_quality=high_quality)
         
         # Phase 2: Alias Cards
-        # Alias cards are always small/local, so we force standard quality settings for them
-        # to ensure the overlay fits correctly regardless of the global HQ flag.
-        # Using font_scale=0.65 (increased 30%) as requested
-        print("\nℹ️  Alias cards will be processed with Standard settings (optimized for local image size)")
-        self.process_alias_cards(font_scale=0.65, high_quality=False)
+        # Alias cards always use the specific font scale (0.65), but we match the
+        # high_quality flag to preserve image fidelity if requested (no resize/compression).
+        print(f"\nℹ️  Alias cards will be processed with Scale 0.65 and Quality: {'High' if high_quality else 'Standard'}")
+        self.process_alias_cards(font_scale=0.65, high_quality=high_quality)
         
         print("\n🎉 Full regeneration process completed!")
 
@@ -118,8 +117,9 @@ class CardRegenerator:
                 response.raise_for_status()
                 
                 # 2. Apply overlay with consistent settings
+                # Use custom_quality=50 to keep file size down even in HQ mode (since images are large)
                 modified_image_data = self.downloader.add_points_overlay(
-                    response.content, points, font_scale=font_scale, high_quality=high_quality
+                    response.content, points, font_scale=font_scale, high_quality=high_quality, custom_quality=50
                 )
 
                 # 3. Save to the unified output directory
