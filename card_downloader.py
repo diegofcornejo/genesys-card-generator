@@ -128,29 +128,28 @@ class YugiohCardDownloader:
                 bbox = draw.textbbox((0, 0), text, font=font)
                 text_width = bbox[2] - bbox[0]
                 text_height = bbox[3] - bbox[1]
-                # Add some extra height to account for font metrics
-                text_height = int(text_height * 1.2)  # 20% extra for proper spacing
             else:
                 # Estimate text size without font
                 text_width = int(len(text) * (font_size * 0.6))
-                text_height = int(font_size * 1.1)  # Add some vertical padding
+                text_height = int(font_size)
             
-            # Position: Bottom-left corner with padding
             # Scale padding relative to font scale so it looks consistent
             base_padding = 10
             scaled_padding = int(base_padding * font_scale)
             
-            x = scaled_padding
-            y = img_height - text_height - scaled_padding - int(10 * font_scale)  # Extra padding from bottom
-            
             # Create background rectangle with generous padding for proper fit
-            rect_padding_horizontal = int(12 * font_scale)  # Scaled horizontal padding
-            rect_padding_vertical = int(8 * font_scale)     # Scaled vertical padding
+            rect_padding_horizontal = int(16 * font_scale)  # Increased horizontal padding
+            rect_padding_vertical = int(10 * font_scale)    # Increased vertical padding
             
-            rect_x1 = x - rect_padding_horizontal
-            rect_y1 = y - rect_padding_vertical
-            rect_x2 = x + text_width + rect_padding_horizontal
-            rect_y2 = y + text_height + rect_padding_vertical
+            # Calculate rectangle dimensions
+            rect_width = text_width + (rect_padding_horizontal * 2)
+            rect_height = text_height + (rect_padding_vertical * 2)
+            
+            # Position: Bottom-left corner with padding
+            rect_x1 = scaled_padding
+            rect_y2 = img_height - scaled_padding - int(10 * font_scale)
+            rect_y1 = rect_y2 - rect_height
+            rect_x2 = rect_x1 + rect_width
             
             # Ensure the rectangle doesn't go outside image boundaries
             rect_x1 = max(0, rect_x1)
@@ -187,17 +186,23 @@ class YugiohCardDownloader:
             # Draw text on top, positioned to be centered in the rectangle
             draw = ImageDraw.Draw(image)
             
-            # Calculate text position to center it in the rectangle
-            text_x = rect_x1 + (rect_x2 - rect_x1 - text_width) // 2
-            text_y = rect_y1 + (rect_y2 - rect_y1 - text_height) // 2
-            
-            # Make sure text is within bounds
-            text_x = max(rect_x1 + 2, text_x)
-            text_y = max(rect_y1 + 2, text_y)
+            # Calculate center of the rectangle
+            center_x = (rect_x1 + rect_x2) / 2
+            center_y = (rect_y1 + rect_y2) / 2
             
             if font:
-                draw.text((text_x, text_y), text, fill=text_color, font=font)
+                # Use anchor='mm' to center text exactly (middle-horizontal, middle-vertical)
+                try:
+                    draw.text((center_x, center_y), text, fill=text_color, font=font, anchor='mm')
+                except ValueError:
+                    # Fallback for older Pillow versions that might not support anchor
+                    text_x = rect_x1 + (rect_width - text_width) // 2
+                    text_y = rect_y1 + (rect_height - text_height) // 2
+                    draw.text((text_x, text_y), text, fill=text_color, font=font)
             else:
+                # Fallback for default font
+                text_x = rect_x1 + (rect_width - text_width) // 2
+                text_y = rect_y1 + (rect_height - text_height) // 2
                 draw.text((text_x, text_y), text, fill=text_color)
             
             # Convert back to RGB if needed
