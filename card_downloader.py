@@ -147,7 +147,19 @@ class YugiohCardDownloader:
             
             # Position: Bottom-left corner with padding
             rect_x1 = scaled_padding
-            rect_y2 = img_height - scaled_padding - int(10 * font_scale)
+            
+            # Base bottom position
+            bottom_offset = scaled_padding + int(10 * font_scale)
+            
+            # Move up by 10% of image height for High Quality mode, BUT only for downloaded cards
+            # We distinguish downloaded cards by their larger font_scale (> 1.0)
+            # Alias cards use font_scale=0.70 even in HQ mode
+            if high_quality and font_scale > 1.0:
+                bottom_offset += int(img_height * 0.035)
+                # Move right slightly (2.5% of width)
+                rect_x1 += int(img_width * 0.025)
+            
+            rect_y2 = img_height - bottom_offset
             rect_y1 = rect_y2 - rect_height
             rect_x2 = rect_x1 + rect_width
             

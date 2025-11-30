@@ -70,7 +70,7 @@ class CardRegenerator:
     def run_regeneration(self, limit: int = None, high_quality: bool = False):
         """Execute both phases of the regeneration process."""
         # Determine font scale based on quality setting
-        font_scale = 1.70 if high_quality else 0.70
+        font_scale = 1.40 if high_quality else 0.70
         
         if high_quality:
             print("✨ High Quality Mode: ON (Original image sizes)")
