@@ -41,15 +41,15 @@ pip install -r requirements.txt
 
 ## Usage
 
-The main script to generate or regenerate all card images is `regenerate_all_cards.py`. It handles both downloading new cards and processing local alias images in a unified process.
+The main script to generate or regenerate all card images is `generate_cards.py`. It handles both downloading new cards and processing local alias images in a unified process.
 
 ### Basic Usage
 
-To regenerate all cards using the default file paths (`cards.json`, `alias.json`, `selected_images`) and save them to the `generated_cards` directory:
+To regenerate all cards using the default file paths (`cards.json`, `alias.json`, `alias_images`) and save them to the `generated_cards` directory:
 
 ```bash
 source venv/bin/activate  # Activate virtual environment first
-python3 regenerate_all_cards.py
+python3 generate_cards.py
 ```
 
 The script will first clean the output directory to ensure a fresh build.
@@ -59,7 +59,7 @@ The script will first clean the output directory to ensure a fresh build.
 To test the process on a small number of cards, use the `--limit` option. This will only process the first 10 cards from `cards.json` (and all alias cards).
 
 ```bash
-python3 regenerate_all_cards.py --limit 10
+python3 generate_cards.py --limit 10
 ```
 
 ### Advanced Usage
@@ -67,7 +67,7 @@ python3 regenerate_all_cards.py --limit 10
 You can customize the paths for input files and the output directory.
 
 ```bash
-python3 regenerate_all_cards.py \
+python3 generate_cards.py \
     --cards /path/to/your/cards.json \
     --alias /path/to/your/alias.json \
     --alias-images /path/to/your/local_images \
@@ -78,7 +78,7 @@ python3 regenerate_all_cards.py \
 
 - `-c, --cards`: Path to the cards JSON file (default: `cards.json`).
 - `-a, --alias`: Path to the alias JSON file (default: `alias.json`).
-- `-i, --alias-images`: Directory with pre-downloaded alias images (default: `selected_images`).
+- `-i, --alias-images`: Directory with pre-downloaded alias images (default: `alias_images`).
 - `-o, --output`: Unified output directory for all generated cards (default: `generated_cards`).
 - `-d, --delay`: Delay between downloads in seconds (default: 0.1).
 - `-l, --limit`: For testing, limits the number of cards processed from `cards.json` (default: all).

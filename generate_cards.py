@@ -207,8 +207,8 @@ def main():
         help='Path to alias JSON file (default: alias.json)'
     )
     parser.add_argument(
-        '-i', '--alias-images', default='selected_images',
-        help='Directory containing pre-downloaded alias images (default: selected_images)'
+        '-i', '--alias-images', default='alias_images',
+        help='Directory containing pre-downloaded alias images (default: alias_images)'
     )
     parser.add_argument(
         '-o', '--output', default='generated_cards',

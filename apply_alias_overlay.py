@@ -167,8 +167,8 @@ def main():
     )
     parser.add_argument(
         '-i', '--images',
-        default='selected_images',
-        help='Directory containing alias images (default: selected_images)'
+        default='alias_images',
+        help='Directory containing alias images (default: alias_images)'
     )
     parser.add_argument(
         '-o', '--output',
