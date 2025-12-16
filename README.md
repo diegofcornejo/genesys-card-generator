@@ -27,11 +27,11 @@ Run the setup script to automatically configure the Python environment:
 
 ### Manual Setup
 
-1. Make sure you have Python 3.6+ installed
+1. Make sure you have Python 3.8+ installed
 2. Create a virtual environment:
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 3. Install dependencies:
 ```bash
@@ -49,7 +49,7 @@ The main script is `generate.py`. It orchestrates both phases (downloaded cards 
 To regenerate all cards using the default file paths (`cards.json`, `alias.json`, `alias_images`) and save them to the `generated_cards` directory:
 
 ```bash
-source venv/bin/activate  # Activate virtual environment first
+source .venv/bin/activate  # Activate virtual environment first
 python3 generate.py
 ```
 
@@ -83,6 +83,14 @@ python3 generate.py \
     --alias /path/to/your/alias.json \
     --alias-images /path/to/your/local_images \
     --output /path/to/final_destination
+```
+
+### Optional: Download-only helper
+
+If you only want to download card images (with overlay) into a separate folder, you can use:
+
+```bash
+python3 card_downloader.py --help
 ```
 
 ### Command Line Options
