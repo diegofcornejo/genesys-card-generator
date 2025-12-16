@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-Regenerate All Card Images with Updated Points
+Generate Yu-Gi-Oh! Card Images with Genesys Points Overlay
 
-This master script handles the full regeneration process for all cards:
-1.  Downloads cards from cards.json and applies point overlays.
-2.  Applies point overlays to pre-existing alias card images.
+This script generates card images with point overlays and can run one or both phases:
+1. Download cards from cards.json and apply point overlays.
+2. Apply point overlays to pre-downloaded alias images (alias.json + alias_images/).
 
-All generated cards are saved to a single output directory with consistent
-overlay settings.
+All generated images are saved to a single output directory with consistent overlay settings.
 """
 
 import json
@@ -16,14 +15,21 @@ import sys
 import time
 import shutil
 from pathlib import Path
-from typing import Dict, List
-from card_downloader import YugiohCardDownloader
+from typing import Dict, List, Optional
 
 
 class CardRegenerator:
     """Orchestrates the full card regeneration process."""
 
-    def __init__(self, cards_path: str, alias_path: str, alias_images_dir: str, output_dir: str, delay: float):
+    def __init__(
+        self,
+        cards_path: str,
+        alias_path: Optional[str],
+        alias_images_dir: Optional[str],
+        output_dir: str,
+        delay: float,
+        generation: str = "all",
+    ):
         """
         Initialize the regenerator.
 
@@ -33,19 +39,24 @@ class CardRegenerator:
             alias_images_dir: Directory with pre-downloaded alias images
             output_dir: Directory to save all generated cards
             delay: Delay between downloads
+            generation: What to generate: all, cards, alias
         """
         self.cards_path = Path(cards_path)
-        self.alias_path = Path(alias_path)
-        self.alias_images_dir = Path(alias_images_dir)
+        self.alias_path = Path(alias_path) if alias_path else None
+        self.alias_images_dir = Path(alias_images_dir) if alias_images_dir else None
         self.output_dir = Path(output_dir)
         self.delay = delay
+        self.generation = generation
+
+        # Import here so `--help` works even without deps installed
+        from card_downloader import YugiohCardDownloader
 
         # This will be used for applying overlays and for downloading
         self.downloader = YugiohCardDownloader(output_dir=str(self.output_dir), delay=self.delay)
 
         # Load data
         self.cards_data = self._load_cards_data()
-        self.alias_data = self._load_alias_data()
+        self.alias_data = self._load_alias_data() if self.alias_path else {}
 
         # Clean and recreate the output directory
         if self.output_dir.exists():
@@ -64,11 +75,13 @@ class CardRegenerator:
 
     def _load_alias_data(self) -> Dict:
         """Load alias.json."""
+        if not self.alias_path:
+            return {}
         with open(self.alias_path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
     def run_regeneration(self, limit: int = None, high_quality: bool = False):
-        """Execute both phases of the regeneration process."""
+        """Execute regeneration process based on generation scope."""
         # Determine font scale based on quality setting
         font_scale = 1.40 if high_quality else 0.70
         
@@ -77,15 +90,24 @@ class CardRegenerator:
         else:
             print("📉 Standard Mode: ON (Optimized/Thumbnail sizes)")
 
-        self.process_primary_cards(limit=limit, font_scale=font_scale, high_quality=high_quality)
+        if self.generation in ("all", "cards"):
+            self.process_primary_cards(limit=limit, font_scale=font_scale, high_quality=high_quality)
+
+        if self.generation in ("all", "alias"):
+            # Phase 2: Alias Cards
+            # Alias cards always use the specific font scale, but we match the
+            # high_quality flag to preserve image fidelity if requested (no resize/compression).
+            print(
+                f"\nℹ️  Alias cards will be processed with Scale 0.70 and Quality: {'High' if high_quality else 'Standard'}"
+            )
+            self.process_alias_cards(font_scale=0.70, high_quality=high_quality)
         
-        # Phase 2: Alias Cards
-        # Alias cards always use the specific font scale (0.65), but we match the
-        # high_quality flag to preserve image fidelity if requested (no resize/compression).
-        print(f"\nℹ️  Alias cards will be processed with Scale 0.70 and Quality: {'High' if high_quality else 'Standard'}")
-        self.process_alias_cards(font_scale=0.70, high_quality=high_quality)
-        
-        print("\n🎉 Full regeneration process completed!")
+        if self.generation == "cards":
+            print("\n🎉 Card generation completed (cards only)!")
+        elif self.generation == "alias":
+            print("\n🎉 Card generation completed (alias only)!")
+        else:
+            print("\n🎉 Full regeneration process completed!")
 
     def process_primary_cards(self, limit: int = None, font_scale: float = 0.5, high_quality: bool = False):
         """Phase 1: Download and apply overlays for cards in cards.json."""
@@ -141,6 +163,12 @@ class CardRegenerator:
     def process_alias_cards(self, font_scale: float = 0.5, high_quality: bool = False):
         """Phase 2: Apply overlays for alias cards from alias.json."""
         print("\n--- Phase 2: Processing Alias Cards (from alias.json) ---")
+        if not self.alias_images_dir:
+            print("❌ Error: alias_images_dir was not provided, cannot process aliases.")
+            return
+        if not self.alias_data:
+            print("⚠️  No alias data loaded (alias.json missing or empty), nothing to do.")
+            return
         total_aliases = sum(len(v) for v in self.alias_data.values())
         processed_count = 0
         skipped_count = 0
@@ -227,21 +255,36 @@ def main():
         action='store_true',
         help='Generate high quality images (original size) instead of thumbnails'
     )
+    parser.add_argument(
+        '-g', '--generate',
+        nargs='?',
+        const='all',
+        default='all',
+        choices=['all', 'cards', 'alias'],
+        help="What to generate: all, cards, alias (default: all)"
+    )
 
     args = parser.parse_args()
 
+    if args.generate == 'alias' and args.limit is not None:
+        print("ℹ️  Note: --limit only applies to primary cards (cards.json). It is ignored when --generate=alias.")
+
     # Validate paths
-    for path in [args.cards, args.alias, args.alias_images]:
+    required_paths = [args.cards]
+    if args.generate in ('all', 'alias'):
+        required_paths.extend([args.alias, args.alias_images])
+    for path in required_paths:
         if not os.path.exists(path):
             print(f"❌ Error: Required file or directory not found: {path}")
             sys.exit(1)
 
     regenerator = CardRegenerator(
         cards_path=args.cards,
-        alias_path=args.alias,
-        alias_images_dir=args.alias_images,
+        alias_path=args.alias if args.generate in ('all', 'alias') else None,
+        alias_images_dir=args.alias_images if args.generate in ('all', 'alias') else None,
         output_dir=args.output,
-        delay=args.delay
+        delay=args.delay,
+        generation=args.generate,
     )
     
     regenerator.run_regeneration(limit=args.limit, high_quality=args.high_quality)

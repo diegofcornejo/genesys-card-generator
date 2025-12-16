@@ -1,10 +1,11 @@
-# Yu-Gi-Oh! Card Image Downloader with (Genesys) Points Overlay
+# Yu-Gi-Oh! Card Image Generator (Cards + Alias) with (Genesys) Points Overlay
 
-A fast and efficient Python script to download Yu-Gi-Oh! card images directly from YGOPRODeck using card codes from a JSON file and automatically overlays Genesys point values on each card.
+A Python tool to generate Yu-Gi-Oh! card images with Genesys point overlays. It can (1) download official card images from YGOPRODeck using `cards.json`, and (2) apply the same point overlays to pre-downloaded **alias** images using `alias.json` + `alias_images/`.
 
 ## Features
 
-- **Direct image downloads** - No API calls needed, uses direct image URLs
+- **Direct image downloads** - No API calls needed, uses direct image URLs (YGOPRODeck images)
+- **Cards + alias support** - Generate downloaded cards, local alias cards, or both
 - **Points overlay** - Automatically adds point values from JSON as visible text on each card
 - **Color-coded points** - Background colors change based on point values for quick identification.
 - **Smart font sizing** - Automatically scales text size based on image dimensions
@@ -41,7 +42,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-The main script to generate or regenerate all card images is `generate_cards.py`. It handles both downloading new cards and processing local alias images in a unified process.
+The main script is `generate.py`. It orchestrates both phases (downloaded cards + local alias images) and writes everything to a single output directory.
 
 ### Basic Usage
 
@@ -49,7 +50,7 @@ To regenerate all cards using the default file paths (`cards.json`, `alias.json`
 
 ```bash
 source venv/bin/activate  # Activate virtual environment first
-python3 generate_cards.py
+python3 generate.py
 ```
 
 The script will first clean the output directory to ensure a fresh build.
@@ -59,7 +60,17 @@ The script will first clean the output directory to ensure a fresh build.
 To test the process on a small number of cards, use the `--limit` option. This will only process the first 10 cards from `cards.json` (and all alias cards).
 
 ```bash
-python3 generate_cards.py --limit 10
+python3 generate.py --limit 10
+```
+
+### Generate Scope (cards vs alias)
+
+By default the script generates **everything** (`all`). You can choose to run only one phase:
+
+```bash
+python3 generate.py --generate cards   # Only cards from cards.json
+python3 generate.py --generate alias   # Only aliases (still needs cards.json for point values)
+python3 generate.py --generate all     # Both (default)
 ```
 
 ### Advanced Usage
@@ -67,7 +78,7 @@ python3 generate_cards.py --limit 10
 You can customize the paths for input files and the output directory.
 
 ```bash
-python3 generate_cards.py \
+python3 generate.py \
     --cards /path/to/your/cards.json \
     --alias /path/to/your/alias.json \
     --alias-images /path/to/your/local_images \
@@ -83,10 +94,13 @@ python3 generate_cards.py \
 - `-d, --delay`: Delay between downloads in seconds (default: 0.1).
 - `-l, --limit`: For testing, limits the number of cards processed from `cards.json` (default: all).
 - `-hq, --high-quality`: Generate high quality images (original size) instead of optimized thumbnails.
+- `-g, --generate`: What to generate: `all`, `cards`, `alias` (default: `all`).
 
 ## JSON File Format
 
-The JSON file should contain an array of card objects with at least a `code` field:
+### cards.json
+
+`cards.json` should contain an array of card objects with at least a `code` field:
 
 ```json
 [
@@ -109,6 +123,17 @@ Required fields:
 
 Optional fields:
 - `name`: Card name, used for progress messages in the console.
+
+### alias.json
+
+`alias.json` maps an **original** card code (must exist in `cards.json`) to a list of **alias** card codes. Each alias must have a corresponding local image at `alias_images/{alias_code}.jpg`.
+
+```json
+{
+  "21044178": [14532164, 12580478],
+  "98287529": [10802916]
+}
+```
 
 ## Output
 
@@ -162,29 +187,26 @@ The script handles various error conditions:
 - Image processing errors
 - File system errors
 
-If point overlay processing fails for any image, the script will save the original image without the overlay and continue processing.
+When a card/alias fails to process, the script logs the error and continues with the remaining items.
 
 ## Example Output
 
 ```
-🚀 Starting card image download...
-📁 Output directory: /Users/diego/personal/ygopro/genesys-card-generator/downloaded_cards
-📊 Found 2681 cards to process
+🧹 Cleaning output directory: /.../generated_cards
+💾 Output will be saved to: /.../generated_cards
+📉 Standard Mode: ON (Optimized/Thumbnail sizes)
 
-[1/2681] Processing card 21044178
-📥 Downloading image for: 深渊的潜伏者 (ID: 21044178, Points: 100)
-  ✅ Downloaded with 100 points overlay: 21044178.jpg
-
-[2/2681] Processing card 98287529
-📥 Downloading image for: 虚龙魔王 无形矢·心灵 (ID: 98287529, Points: 67)
-  ✅ Downloaded with 67 points overlay: 98287529.jpg
+--- Phase 1: Processing Primary Cards (from cards.json) ---
+[1/2681] Downloading: 深渊的潜伏者 (Code: 21044178, Points: 100)
+  ✅ Generated: 21044178.jpg
 
 ...
 
-🎉 Download completed!
-✅ Successfully downloaded: 2650 cards
-❌ Failed downloads: 31 cards
-📁 Images saved to: /Users/diego/personal/ygopro/genesys-card-generator/downloaded_cards
+--- Phase 2: Processing Alias Cards (from alias.json) ---
+Processing aliases for: 深渊的潜伏者 (Code: 21044178, Points: 100)
+  ✅ Generated: 14532164.jpg
+
+🎉 Full regeneration process completed!
 ```
 
 ## License
