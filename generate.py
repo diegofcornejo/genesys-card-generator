@@ -29,6 +29,7 @@ class CardRegenerator:
         output_dir: str,
         delay: float,
         generation: str = "all",
+        codes: Optional[List[str]] = None,
     ):
         """
         Initialize the regenerator.
@@ -47,6 +48,7 @@ class CardRegenerator:
         self.output_dir = Path(output_dir)
         self.delay = delay
         self.generation = generation
+        self.codes_filter = {str(c) for c in (codes or [])} or None
 
         # Import here so `--help` works even without deps installed
         from card_downloader import YugiohCardDownloader
@@ -114,6 +116,13 @@ class CardRegenerator:
         print("\n--- Phase 1: Processing Primary Cards (from cards.json) ---")
         
         cards_to_process = list(self.cards_data.items())
+        if self.codes_filter:
+            cards_to_process = [(code, data) for (code, data) in cards_to_process if code in self.codes_filter]
+            missing = sorted(self.codes_filter.difference(self.cards_data.keys()))
+            if missing:
+                print(f"❌ Error: The following --code values were not found in cards.json: {', '.join(missing)}")
+                sys.exit(1)
+
         if limit:
             print(f"⚠️  Processing a limited set of {limit} cards for this test run.")
             cards_to_process = cards_to_process[:limit]
@@ -169,11 +178,19 @@ class CardRegenerator:
         if not self.alias_data:
             print("⚠️  No alias data loaded (alias.json missing or empty), nothing to do.")
             return
-        total_aliases = sum(len(v) for v in self.alias_data.values())
+        alias_items = list(self.alias_data.items())
+        if self.codes_filter:
+            # Only process aliases for the requested original card codes
+            alias_items = [(k, v) for (k, v) in alias_items if str(k) in self.codes_filter]
+            if not alias_items:
+                print("ℹ️  No aliases found for the provided --code value(s).")
+                return
+
+        total_aliases = sum(len(v) for _, v in alias_items)
         processed_count = 0
         skipped_count = 0
 
-        for original_code, alias_list in self.alias_data.items():
+        for original_code, alias_list in alias_items:
             if original_code not in self.cards_data:
                 print(f"⚠️  Original card {original_code} not found, skipping its aliases")
                 skipped_count += len(alias_list)
@@ -263,11 +280,31 @@ def main():
         choices=['all', 'cards', 'alias'],
         help="What to generate: all, cards, alias (default: all)"
     )
+    parser.add_argument(
+        '--code',
+        action='append',
+        default=None,
+        help='Generate only a specific card code from cards.json (can be used multiple times, or as a comma-separated list). '
+             'When generating aliases, only aliases for these original codes are processed.'
+    )
 
     args = parser.parse_args()
 
     if args.generate == 'alias' and args.limit is not None:
         print("ℹ️  Note: --limit only applies to primary cards (cards.json). It is ignored when --generate=alias.")
+
+    # Parse --code (supports multiple flags and/or comma-separated lists)
+    codes: Optional[List[str]] = None
+    if args.code:
+        parsed: List[str] = []
+        for raw in args.code:
+            if raw is None:
+                continue
+            for part in str(raw).split(','):
+                part = part.strip()
+                if part:
+                    parsed.append(part)
+        codes = parsed or None
 
     # Validate paths
     required_paths = [args.cards]
@@ -285,6 +322,7 @@ def main():
         output_dir=args.output,
         delay=args.delay,
         generation=args.generate,
+        codes=codes,
     )
     
     regenerator.run_regeneration(limit=args.limit, high_quality=args.high_quality)

@@ -55,6 +55,21 @@ python3 generate.py
 
 The script will first clean the output directory to ensure a fresh build.
 
+### Generate a Single Card (and its Aliases)
+
+To generate **only one** card defined in `cards.json` (and, if present in `alias.json`, also generate its alias images from `alias_images/`), use `--code`:
+
+```bash
+python3 generate.py --code 10443957
+```
+
+You can also pass multiple codes (repeat the flag or use a comma-separated list):
+
+```bash
+python3 generate.py --code 10443957 --code 14532163
+python3 generate.py --code 10443957,14532163
+```
+
 ### Test Run with a Limit
 
 To test the process on a small number of cards, use the `--limit` option. This will only process the first 10 cards from `cards.json` (and all alias cards).
@@ -71,6 +86,13 @@ By default the script generates **everything** (`all`). You can choose to run on
 python3 generate.py --generate cards   # Only cards from cards.json
 python3 generate.py --generate alias   # Only aliases (still needs cards.json for point values)
 python3 generate.py --generate all     # Both (default)
+```
+
+`--code` works with these scopes too:
+
+```bash
+python3 generate.py --generate cards --code 10443957  # Only the downloaded card for that code
+python3 generate.py --generate alias --code 10443957  # Only aliases for that original code
 ```
 
 ### Advanced Usage
@@ -103,6 +125,7 @@ python3 card_downloader.py --help
 - `-l, --limit`: For testing, limits the number of cards processed from `cards.json` (default: all).
 - `-hq, --high-quality`: Generate high quality images (original size) instead of optimized thumbnails.
 - `-g, --generate`: What to generate: `all`, `cards`, `alias` (default: `all`).
+- `--code`: Generate only a specific card code from `cards.json` (repeatable or comma-separated). When generating aliases, only aliases for these **original** codes are processed.
 
 ## JSON File Format
 
