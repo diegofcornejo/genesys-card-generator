@@ -195,6 +195,11 @@
     "code": 6153210
   },
   {
+    "name": "Dominus Spark",
+    "points": 10,
+    "code": 6325660
+  },
+  {
     "name": "Transaction Rollback",
     "points": 7,
     "code": 6351147
@@ -590,6 +595,11 @@
     "code": 17178486
   },
   {
+    "name": "Kewl Tune Rotary",
+    "points": 40,
+    "code": 17209452
+  },
+  {
     "name": "Confiscation",
     "points": 100,
     "code": 17375316
@@ -638,6 +648,11 @@
     "name": "Mementotlan Twin Dragon",
     "points": 33,
     "code": 19181420
+  },
+  {
+    "name": "Power Vice Dragon",
+    "points": 5,
+    "code": 19434243
   },
   {
     "name": "Heavy Storm",
@@ -1340,6 +1355,11 @@
     "code": 39552584
   },
   {
+    "name": "Kewl Tune Crackle",
+    "points": 70,
+    "code": 39576656
+  },
+  {
     "name": "Duality",
     "points": 3,
     "code": 39973386
@@ -1498,6 +1518,11 @@
     "name": "Fire King Courtier Ulcanix",
     "points": 18,
     "code": 44455560
+  },
+  {
+    "name": "Artmage Impasto -Recapture-",
+    "points": 10,
+    "code": 44654994
   },
   {
     "name": "Delinquent Duo",
@@ -1740,6 +1765,11 @@
     "code": 52687916
   },
   {
+    "name": "Exceptional Schedule",
+    "points": 10,
+    "code": 52782439
+  },
+  {
     "name": "Darklord Ixchel",
     "points": 5,
     "code": 52840267
@@ -1855,6 +1885,11 @@
     "code": 56506740
   },
   {
+    "name": "Elfnote Regina",
+    "points": 40,
+    "code": 56651978
+  },
+  {
     "name": "Angel O7",
     "points": 100,
     "code": 56784842
@@ -1893,6 +1928,11 @@
     "name": "Rank-Up-Magic - The Seventh One",
     "points": 1,
     "code": 57734012
+  },
+  {
+    "name": "Clown Crew Matinee Operatics",
+    "points": 20,
+    "code": 57847269
   },
   {
     "name": "Card of Safe Return",
@@ -2105,6 +2145,16 @@
     "code": 65734501
   },
   {
+    "name": "DoomZ XIII Over - Graflareio",
+    "points": 20,
+    "code": 65848113
+  },
+  {
+    "name": "Kewl Tune B2B",
+    "points": 40,
+    "code": 65961304
+  },
+  {
     "name": "Number 60: Dugares the Timeless",
     "points": 10,
     "code": 66011101
@@ -2175,6 +2225,11 @@
     "code": 67723438
   },
   {
+    "name": "The Crimson King",
+    "points": 10,
+    "code": 67809530
+  },
+  {
     "name": "Kashtira Unicorn",
     "points": 30,
     "code": 68304193
@@ -2228,6 +2283,11 @@
     "name": "Treasures of the Kings",
     "points": 5,
     "code": 69299029
+  },
+  {
+    "name": "Fydraulis Harmonia",
+    "points": 50,
+    "code": 70088809
   },
   {
     "name": "Upstart Goblin",
@@ -2515,6 +2575,11 @@
     "code": 78058681
   },
   {
+    "name": "Solemn Accusation",
+    "points": 12,
+    "code": 78114463
+  },
+  {
     "name": "Ecclesia and the Dark Dragon",
     "points": 3,
     "code": 78397661
@@ -2650,6 +2715,11 @@
     "code": 81560239
   },
   {
+    "name": "Clown Crew Biancaviso",
+    "points": 1,
+    "code": 82159583
+  },
+  {
     "name": "Dinowrestler Pankratops",
     "points": 5,
     "code": 82385847
@@ -2663,6 +2733,11 @@
     "name": "Skill Drain",
     "points": 100,
     "code": 82732705
+  },
+  {
+    "name": "Clown Crew Malabarisme",
+    "points": 10,
+    "code": 83232904
   },
   {
     "name": "The Unstoppable Exodia Incarnate",
@@ -3203,5 +3278,10 @@
     "name": "Mercurium the Living Quicksilver",
     "points": 10,
     "code": 101303084
+  },
+  {
+    "name": "Officiator of Doom Samuel",
+    "points": 10,
+    "code": 101304089
   }
 ]
