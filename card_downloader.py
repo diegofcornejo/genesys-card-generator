@@ -52,10 +52,14 @@ class YugiohCardDownloader:
         Falls back to default font if system fonts are not available.
         """
         font_paths = [
-            # macOS fonts
+            # macOS fonts (prefer bold for the points badge)
+            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+            "/Library/Fonts/Arial Bold.ttf",
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
             "/System/Library/Fonts/Arial.ttf",
             "/Library/Fonts/Arial.ttf",
-            # Windows fonts
+            # Windows fonts (prefer bold)
+            "C:/Windows/Fonts/arialbd.ttf",
             "C:/Windows/Fonts/arial.ttf",
             "C:/Windows/Fonts/Arial.ttf",
             # Linux fonts
@@ -107,88 +111,75 @@ class YugiohCardDownloader:
             # Image dimensions
             img_width, img_height = image.size
             
-            # Calculate font size based on image size (larger for bigger images)
-            base_font_size = min(img_width, img_height) // 4  # Start with 1/4 of smaller dimension
-            font_size = max(base_font_size, 80)  # Minimum 80px for visibility
-            
-            # Apply font scale
-            font_size = int(font_size * font_scale)
-            
-            # Get font
-            font = self.get_font(font_size)
-            if not font:
-                font_size = 60  # Fallback size
-            
             # Text to display
             text = str(points)
-            
-            # Calculate text dimensions with proper method
+
+            # Badge geometry is proportional to the card width so the circle
+            # looks consistent across thumbnails and high-quality renders.
+            # font_scale is only used later to detect downloaded cards, not to
+            # size the badge.
+            diameter = max(int(img_width * 0.341), 71)
+
+            # Fit the number inside the circle: pick the largest font whose
+            # number fits within ~70% of the diameter (both width and height).
+            inner = diameter * 0.70
+            font_size = max(int(diameter * 0.6), 12)
+            font = self.get_font(font_size)
+            for _ in range(40):
+                if not font:
+                    break
+                bbox = draw.textbbox((0, 0), text, font=font)
+                tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                if (tw <= inner and th <= inner) or font_size <= 10:
+                    break
+                font_size = max(int(font_size * 0.9), 10)
+                font = self.get_font(font_size)
+
+            # Final text dimensions
             if font:
-                # Use textbbox for accurate measurements
                 bbox = draw.textbbox((0, 0), text, font=font)
                 text_width = bbox[2] - bbox[0]
                 text_height = bbox[3] - bbox[1]
             else:
                 # Estimate text size without font
+                font_size = 60
                 text_width = int(len(text) * (font_size * 0.6))
                 text_height = int(font_size)
-            
-            # Scale padding relative to font scale so it looks consistent
-            base_padding = 10
-            scaled_padding = int(base_padding * font_scale)
-            
-            # Create background rectangle with generous padding for proper fit
-            rect_padding_horizontal = int(16 * font_scale)  # Increased horizontal padding
-            rect_padding_vertical = int(10 * font_scale)    # Increased vertical padding
-            
-            # Calculate rectangle dimensions
-            rect_width = text_width + (rect_padding_horizontal * 2)
-            rect_height = text_height + (rect_padding_vertical * 2)
-            
-            # Position: Bottom-left corner with padding
-            rect_x1 = scaled_padding
-            
-            # Base bottom position
-            bottom_offset = scaled_padding + int(10 * font_scale)
-            
-            # Move up by 10% of image height for High Quality mode, BUT only for downloaded cards
-            # We distinguish downloaded cards by their larger font_scale (> 1.0)
-            # Alias cards use font_scale=0.70 even in HQ mode
-            if high_quality and font_scale > 1.0:
-                bottom_offset += int(img_height * 0.035)
-                # Move right slightly (2.5% of width)
-                rect_x1 += int(img_width * 0.025)
-            
-            rect_y2 = img_height - bottom_offset
-            rect_y1 = rect_y2 - rect_height
-            rect_x2 = rect_x1 + rect_width
-            
-            # Ensure the rectangle doesn't go outside image boundaries
-            rect_x1 = max(0, rect_x1)
-            rect_y1 = max(0, rect_y1)
+
+            # Position: flush against the bottom-left corner of the image.
+            rect_x1 = 0
+            rect_y2 = img_height
+            rect_y1 = rect_y2 - diameter
+            rect_x2 = rect_x1 + diameter
+
+            # Keep the badge inside the image (shift, don't squash, to stay circular)
+            if rect_x1 < 0:
+                rect_x2 -= rect_x1
+                rect_x1 = 0
+            if rect_y1 < 0:
+                rect_y2 -= rect_y1
+                rect_y1 = 0
             rect_x2 = min(img_width, rect_x2)
             rect_y2 = min(img_height, rect_y2)
-            
-            # Choose colors based on points value
-            if points >= 50:
-                bg_color = (255, 0, 0, 200)  # Red background for high points
-                text_color = (255, 255, 255)  # White text
-            elif points >= 20:
-                bg_color = (255, 165, 0, 200)  # Orange background for medium points
-                text_color = (0, 0, 0)  # Black text
-            elif points >= 10:
-                bg_color = (255, 255, 0, 200)  # Yellow background for medium-low points
-                text_color = (0, 0, 0)  # Black text
-            else:
-                bg_color = (0, 255, 0, 200)  # Green background for low points
-                text_color = (0, 0, 0)  # Black text
-            
+
+            # Single uniform style (no per-points colors):
+            # semi-transparent black circle with light-blue ring and white number.
+            bg_color = (0, 0, 0, 235)
+            ring_color = (93, 196, 234, 255)  # light blue (#5dc4ea)
+            text_color = (255, 255, 255)
+            ring_width = max(int(diameter * 0.07), 2)
+
             # Create overlay for semi-transparent background
             overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
             overlay_draw = ImageDraw.Draw(overlay)
-            
-            # Draw background rectangle with rounded corners (optional)
-            overlay_draw.rectangle([rect_x1, rect_y1, rect_x2, rect_y2], fill=bg_color)
+
+            # Draw the circular badge with a light-blue border ring
+            overlay_draw.ellipse(
+                [rect_x1, rect_y1, rect_x2, rect_y2],
+                fill=bg_color,
+                outline=ring_color,
+                width=ring_width,
+            )
             
             # Composite the overlay onto the original image
             if image.mode != 'RGBA':
@@ -208,13 +199,13 @@ class YugiohCardDownloader:
                     draw.text((center_x, center_y), text, fill=text_color, font=font, anchor='mm')
                 except ValueError:
                     # Fallback for older Pillow versions that might not support anchor
-                    text_x = rect_x1 + (rect_width - text_width) // 2
-                    text_y = rect_y1 + (rect_height - text_height) // 2
+                    text_x = rect_x1 + (diameter - text_width) // 2
+                    text_y = rect_y1 + (diameter - text_height) // 2
                     draw.text((text_x, text_y), text, fill=text_color, font=font)
             else:
                 # Fallback for default font
-                text_x = rect_x1 + (rect_width - text_width) // 2
-                text_y = rect_y1 + (rect_height - text_height) // 2
+                text_x = rect_x1 + (diameter - text_width) // 2
+                text_y = rect_y1 + (diameter - text_height) // 2
                 draw.text((text_x, text_y), text, fill=text_color)
             
             # Convert back to RGB if needed
